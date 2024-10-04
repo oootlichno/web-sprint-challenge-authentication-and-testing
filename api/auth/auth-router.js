@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const router = require('express').Router();
-const { BCRYPT_ROUNDS} = require('../../secrets-index');
+const { BCRYPT_ROUNDS, JWT_SECRET} = require('../../secrets-index');
 const {restricted} = require('../../api/middleware/restricted');
 const User = require('../auth/auth-model');
 
@@ -52,8 +52,9 @@ router.post('/register', async (req, res, next) => {
   }
 });
 
-router.post('/login', restricted,  async (req, res, next) => {
-  let { username, password } = req.body;
+
+router.post('/login', async (req, res, next) => {
+  const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ message: "username and password required" });
@@ -63,16 +64,18 @@ router.post('/login', restricted,  async (req, res, next) => {
     const user = await User.findBy({ username });
 
     if (user && bcrypt.compareSync(password, user.password)) {
-      const token = buildToken(user);
-      res.json({
+      const token = buildToken(user); 
+      res.status(200).json({
         message: `welcome, ${user.username}`,
         token,
+        
       });
     } else {
       res.status(401).json({ message: "invalid credentials" });
     }
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'There was an error during login' });
   }
 });
 
@@ -88,5 +91,7 @@ function buildToken(user) {
 
   return jwt.sign(payload, JWT_SECRET, options);
 }
+
+
 
 module.exports = router;

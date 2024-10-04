@@ -10,15 +10,15 @@ async function find() {
 }
 
 async function findBy(filter) {
-  try {
-      const users = await db("users")
-          .select("id", "username")
-          .where(filter);
-      return users[0] || null;
-  } catch (error) {
-      throw new Error("Unable to find user");
+    try {
+        const users = await db("users")
+            .select("id", "username", "password")
+            .where(filter);
+        return users[0] || null;
+    } catch (error) {
+        throw new Error("Unable to find user");
+    }
   }
-}
 
 function findById(id) {
   return db("users")
